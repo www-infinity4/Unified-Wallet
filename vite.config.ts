@@ -11,10 +11,8 @@ export default defineConfig({
         'unified-wallet': resolve(__dirname, 'src/index.ts'),
         widget: resolve(__dirname, 'src/widget/index.ts'),
       },
-      name: 'UnifiedWallet',
-      formats: ['es', 'umd'],
-      fileName: (format, entryName) =>
-        format === 'es' ? `${entryName}.js` : `${entryName}.${format}.cjs`,
+      formats: ['es'],
+      fileName: (_format, entryName) => `${entryName}.js`,
     },
     rollupOptions: {
       external: ['react', 'react-dom'],

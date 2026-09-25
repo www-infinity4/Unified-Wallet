@@ -1,6 +1,6 @@
 import type { WalletAccount, WalletConfig, WalletProvider, WalletState } from './types.ts'
 import { MockWalletProvider } from './adapter/mock.ts'
-import { LedgerClient, type LedgerClientConfig } from './ledger/client.ts'
+import { LedgerClient } from './ledger/client.ts'
 import { createSession, isSessionValid, MemorySessionStore, type SessionStore } from './session/index.ts'
 
 export class UnifiedWallet {

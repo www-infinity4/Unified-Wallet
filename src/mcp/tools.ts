@@ -1,5 +1,3 @@
-import type { LedgerEntry } from '../types.ts'
-
 export interface LedgerToolParams {
   userId: string
   asset: 'star-coin' | 'infinity-token'

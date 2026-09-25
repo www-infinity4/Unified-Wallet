@@ -3,13 +3,12 @@
   "version": "0.1.0",
   "description": "Embeddable plug-and-play wallet and star-coin ledger SDK",
   "type": "module",
-  "main": "./dist/unified-wallet.umd.cjs",
+  "main": "./dist/unified-wallet.js",
   "module": "./dist/unified-wallet.js",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "import": "./dist/unified-wallet.js",
-      "require": "./dist/unified-wallet.umd.cjs",
       "types": "./dist/index.d.ts"
     },
     "./widget": {
