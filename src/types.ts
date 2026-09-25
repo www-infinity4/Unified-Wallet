@@ -4,11 +4,18 @@ export interface WalletAccount {
   publicKey?: string
 }
 
+export interface CloudflareWalletConfig {
+  starquestUrl: string
+  infinityUrl?: string
+  getDeviceToken: () => string | Promise<string>
+}
+
 export interface WalletConfig {
   apiKey: string
   apiUrl?: string
   appName: string
   chains?: string[]
+  cloudflare?: CloudflareWalletConfig
 }
 
 export interface LedgerEntry {
