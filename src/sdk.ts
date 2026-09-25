@@ -5,7 +5,7 @@ import { CloudflareLedgerAdapter, type RewardAction } from './ledger/cloudflare.
 import { createSession, isSessionValid, MemorySessionStore, type SessionStore } from './session/index.ts'
 
 export class UnifiedWallet {
-  private readonly config: Required<WalletConfig>
+  private readonly config: WalletConfig & { apiUrl: string; chains: string[] }
   private readonly providers: Map<string, WalletProvider> = new Map()
   private readonly sessions: SessionStore
   private activeProvider: WalletProvider | null = null
@@ -80,6 +80,10 @@ export class UnifiedWallet {
   }
 
   async getBalance(): Promise<number> {
+    if (this.cloudflare) {
+      await this.refreshCloudflareState()
+      return this._state.balance
+    }
     return this.refreshBalance()
   }
 
