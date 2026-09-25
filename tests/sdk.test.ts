@@ -59,3 +59,48 @@ describe('UnifiedWallet SDK', () => {
     expect(wallet.state.account).toBeNull()
   })
 })
+
+
+describe('Cloudflare reward mode', () => {
+  afterEach(() => {
+    globalThis.fetch = globalFetch
+  })
+
+  it('maps a share reference to StarQuest attemptId and contentId', async () => {
+    let body: Record<string, unknown> | null = null
+    globalThis.fetch = async (_input: RequestInfo | URL, init?: RequestInit) => {
+      body = JSON.parse(String(init?.body ?? '{}')) as Record<string, unknown>
+      return Response.json({ ok: true, credited: true, state: { starCoins: 7 } })
+    }
+
+    const wallet = new UnifiedWallet({
+      ...TEST_CONFIG,
+      cloudflare: {
+        starquestUrl: 'https://starquest.example',
+        getDeviceToken: () => 'sq_abcdefghijklmnopqrstuvwxyzABCDEFGH',
+      },
+    })
+
+    await wallet.reward('share', 'share-attempt-123', { contentId: 'card-456' })
+    expect(body).toEqual({ attemptId: 'share-attempt-123', contentId: 'card-456' })
+  })
+
+  it('rejects a share without contentId before calling the network', async () => {
+    let calls = 0
+    globalThis.fetch = async () => {
+      calls += 1
+      return Response.json({})
+    }
+
+    const wallet = new UnifiedWallet({
+      ...TEST_CONFIG,
+      cloudflare: {
+        starquestUrl: 'https://starquest.example',
+        getDeviceToken: () => 'sq_abcdefghijklmnopqrstuvwxyzABCDEFGH',
+      },
+    })
+
+    await expect(wallet.reward('share', 'share-attempt-123')).rejects.toThrow('contentId is required')
+    expect(calls).toBe(0)
+  })
+})
