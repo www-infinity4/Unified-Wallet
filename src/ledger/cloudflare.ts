@@ -56,9 +56,18 @@ export class CloudflareLedgerAdapter {
     if (!path) {
       throw new Error(`Reward action "${action}" is not enabled by the authoritative Worker yet`)
     }
+    if (action === 'share') {
+      const contentId = typeof metadata.contentId === 'string' ? metadata.contentId.trim() : ''
+      if (!contentId) throw new Error('contentId is required for share rewards')
+      return this.starquest(path, {
+        method: 'POST',
+        body: JSON.stringify({ ...metadata, attemptId: referenceId, contentId }),
+      })
+    }
+
     return this.starquest(path, {
       method: 'POST',
-      body: JSON.stringify({ referenceId, ...metadata }),
+      body: JSON.stringify({ ...metadata, referenceId }),
     })
   }
 }
