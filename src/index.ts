@@ -6,6 +6,11 @@ export {
 } from './adapter/index.ts'
 export { LedgerClient, type LedgerClientConfig } from './ledger/index.ts'
 export {
+  CloudflareLedgerAdapter,
+  type CloudflareLedgerAdapterConfig,
+  type RewardAction,
+} from './ledger/cloudflare.ts'
+export {
   createSession,
   isSessionValid,
   MemorySessionStore,
