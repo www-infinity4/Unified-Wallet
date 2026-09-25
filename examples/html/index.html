@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Unified Wallet - HTML Example</title>
+  </head>
+  <body>
+    <h1>Unified Wallet Plug-In</h1>
+    <div id="wallet-root"></div>
+
+    <script type="module">
+      import { UnifiedWallet } from '../../dist/unified-wallet.js'
+
+      const wallet = new UnifiedWallet({
+        apiKey: 'demo-key',
+        apiUrl: 'http://localhost:3000',
+        appName: 'My Site',
+      })
+
+      const root = document.getElementById('wallet-root')
+
+      function render(state) {
+        if (!state.connected) {
+          root.innerHTML = `<button id="connect">Connect Wallet</button>`
+          document.getElementById('connect').onclick = async () => {
+            await wallet.connect('mock')
+            render(wallet.state)
+          }
+        } else {
+          root.innerHTML = `
+            <p>Address: <code>${state.account.address}</code></p>
+            <p>Balance: <strong>${state.balance}</strong> ⭐</p>
+            <button id="collect">Collect 10 Stars</button>
+            <button id="disconnect">Disconnect</button>
+          `
+          document.getElementById('collect').onclick = async () => {
+            await wallet.collectStars(10, 'HTML demo')
+            render(wallet.state)
+          }
+          document.getElementById('disconnect').onclick = async () => {
+            await wallet.disconnect()
+            render(wallet.state)
+          }
+        }
+      }
+
+      render(wallet.state)
+    </script>
+  </body>
+</html>
