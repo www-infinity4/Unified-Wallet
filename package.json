@@ -1,0 +1,70 @@
+{
+  "name": "@infinity4/unified-wallet",
+  "version": "0.1.0",
+  "description": "Embeddable plug-and-play wallet and star-coin ledger SDK",
+  "type": "module",
+  "main": "./dist/unified-wallet.umd.cjs",
+  "module": "./dist/unified-wallet.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/unified-wallet.js",
+      "require": "./dist/unified-wallet.umd.cjs",
+      "types": "./dist/index.d.ts"
+    },
+    "./widget": {
+      "import": "./dist/widget.js",
+      "types": "./dist/widget/index.d.ts"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "eslint . --ext .ts,.tsx"
+  },
+  "keywords": [
+    "wallet",
+    "sdk",
+    "ledger",
+    "stars",
+    "crypto",
+    "embeddable"
+  ],
+  "author": "infinity4",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "@typescript-eslint/eslint-plugin": "^7.0.0",
+    "@typescript-eslint/parser": "^7.0.0",
+    "@vitejs/plugin-react": "^4.2.0",
+    "eslint": "^8.57.0",
+    "jsdom": "^24.0.0",
+    "typescript": "^5.3.0",
+    "vite": "^5.0.0",
+    "vite-plugin-dts": "^3.7.0",
+    "vitest": "^1.2.0"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "peerDependencies": {
+    "@solana/web3.js": "^1.87.0",
+    "ethers": "^6.9.0"
+  },
+  "peerDependenciesMeta": {
+    "@solana/web3.js": {
+      "optional": true
+    },
+    "ethers": {
+      "optional": true
+    }
+  }
+}
