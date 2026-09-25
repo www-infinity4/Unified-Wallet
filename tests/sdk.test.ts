@@ -68,9 +68,16 @@ describe('Cloudflare reward mode', () => {
 
   it('maps a share reference to StarQuest attemptId and contentId', async () => {
     let body: Record<string, unknown> | null = null
-    globalThis.fetch = async (_input: RequestInfo | URL, init?: RequestInit) => {
-      body = JSON.parse(String(init?.body ?? '{}')) as Record<string, unknown>
-      return Response.json({ ok: true, credited: true, state: { starCoins: 7 } })
+    globalThis.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = new URL(input.toString())
+      if (url.pathname === '/v1/shares') {
+        body = JSON.parse(String(init?.body ?? '{}')) as Record<string, unknown>
+        return Response.json({ ok: true, credited: true, state: { starCoins: 7 } })
+      }
+      if (url.pathname === '/v1/state') {
+        return Response.json({ starCoins: 7 })
+      }
+      return Response.json({}, { status: 404 })
     }
 
     const wallet = new UnifiedWallet({
