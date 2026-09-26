@@ -6,6 +6,22 @@ export interface CloudflareLedgerAdapterConfig {
   getDeviceToken: () => string | Promise<string>
 }
 
+export interface StarQuestState {
+  username?: string
+  starCoins: number
+  pendingShareCredits: number
+  shareCount?: number
+  sharesPerCoin?: number
+  watchHistory?: unknown[]
+  ledger?: unknown[]
+  [key: string]: unknown
+}
+
+interface StarQuestStateResponse {
+  ok: boolean
+  state: StarQuestState
+}
+
 /**
  * Adapter for Infinity's authoritative Cloudflare ledgers.
  *
@@ -35,12 +51,16 @@ export class CloudflareLedgerAdapter {
     return response.json() as Promise<T>
   }
 
-  async state(): Promise<unknown> {
-    return this.starquest('/v1/state')
+  async state(): Promise<StarQuestState> {
+    const response = await this.starquest<StarQuestStateResponse>('/v1/state')
+    if (!response?.ok || !response.state) {
+      throw new Error('StarQuest returned an invalid state response')
+    }
+    return response.state
   }
 
-  async history(): Promise<unknown> {
-    return this.starquest('/v1/history')
+  async history(): Promise<never> {
+    throw new Error('History reads are not enabled by the authoritative StarQuest Worker yet')
   }
 
   /**
