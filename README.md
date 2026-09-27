@@ -1,17 +1,17 @@
 # Unified Wallet
 
-A plug-and-play wallet SDK and star-coin / infinity-token ledger that other websites can drop in with one script tag or npm install.
+A plug-and-play wallet SDK backed by the authoritative Cloudflare ledger. Every connected site reads and writes the same StarCoin, Quant, Music Quant, and Infinity state for the same StarQuest identity.
 
 ## Quick start
 
 ### HTML / Vanilla JS
 
 ```html
-<script type="module">
-  import { UnifiedWallet } from 'https://cdn.example.com/unified-wallet.js'
-  const wallet = new UnifiedWallet({ apiKey: 'YOUR_KEY', appName: 'My Site' })
-  await wallet.connect()
-  await wallet.collectStars(10, 'welcome bonus')
+<script src="https://www-infinity4.github.io/Unified-Wallet/unified-wallet.js"></script>
+<script>
+  const wallet = new InfinityUnifiedWallet({ appName: 'My Site' })
+  const state = await wallet.connect()
+  console.log(state.balances)
 </script>
 ```
 
@@ -33,11 +33,14 @@ npm install @infinity4/unified-wallet
 
 | Method | Description |
 | ------ | ----------- |
-| `wallet.connect(provider?, chain?)` | Connect a wallet |
-| `wallet.getBalance()` | Get current star-coin balance |
-| `wallet.collectStars(amount, reason)` | Credit star-coins |
-| `wallet.getLedger(limit?)` | List ledger entries |
-| `wallet.disconnect()` | Disconnect wallet |
+| `wallet.connect()` | Connect the current StarQuest identity and load every balance |
+| `wallet.refresh()` | Reload authoritative Cloudflare state |
+| `wallet.importLegacy(...)` | One-time, idempotent browser balance/token migration |
+| `wallet.mintToken(type, data, key)` | Store one durable data-backed token |
+| `wallet.spendInfinity(...)` | Spend Infinity through the authoritative ledger |
+| `wallet.subscribe(listener)` | Receive wallet updates in any website UI |
+
+Local storage is used only to locate the existing StarQuest device credential. Balances and token records come from Cloudflare D1.
 
 ## MCP Server
 
