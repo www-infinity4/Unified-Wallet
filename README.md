@@ -7,8 +7,8 @@ A plug-and-play wallet SDK backed by the authoritative Cloudflare ledger. Every 
 ### HTML / Vanilla JS
 
 ```html
-<script src="https://www-infinity4.github.io/Unified-Wallet/unified-wallet.js"></script>
-<script>
+<script src="https://unified-wallet.marvaseater.workers.dev/unified-wallet.js"></script>
+<script type="module">
   const wallet = new InfinityUnifiedWallet({ appName: 'My Site' })
   const state = await wallet.connect()
   console.log(state.balances)
