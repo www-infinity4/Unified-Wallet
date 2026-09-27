@@ -52,11 +52,12 @@ export class CloudflareLedgerAdapter {
   }
 
   async state(): Promise<StarQuestState> {
-    const response = await this.starquest<StarQuestStateResponse>('/v1/state')
-    if (!response?.ok || !response.state) {
+    const response = await this.starquest<StarQuestStateResponse | StarQuestState>('/v1/state')
+    const state = ('state' in response ? response.state : response) as StarQuestState
+    if (!state || typeof state.starCoins !== 'number') {
       throw new Error('StarQuest returned an invalid state response')
     }
-    return response.state
+    return state
   }
 
   async history(): Promise<never> {
