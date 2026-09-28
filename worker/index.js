@@ -18,15 +18,19 @@ async function identity(request,env){
 }
 async function ensureState(env,userId){ const now=Date.now(); await env.DB.prepare('INSERT OR IGNORE INTO unified_wallet_state(user_id,created_at,updated_at) VALUES(?1,?2,?2)').bind(userId,now).run(); return env.DB.prepare('SELECT * FROM unified_wallet_state WHERE user_id=?1').bind(userId).first() }
 async function quantState(env,userId){
-  const db=env.QUANT_DB;
+  const db=env.QUANT_DB||env.DB;
   if(!db) return {walletId:null,balance:0};
   const row=await db.prepare(`SELECT w.wallet_id,COALESCE(b.balance,0) balance FROM quant_wallets w LEFT JOIN quant_wallet_balances b ON b.wallet_id=w.wallet_id WHERE w.user_id=?1`).bind(userId).first();
   return {walletId:row?.wallet_id||null,balance:Number(row?.balance||0)};
 }
 async function tokenCounts(env,userId){ const result=await env.DB.prepare('SELECT token_type,COUNT(*) count FROM unified_token_records WHERE user_id=?1 GROUP BY token_type').bind(userId).all(); return Object.fromEntries(result.results.map(x=>[x.token_type,Number(x.count)])) }
+async function musicState(env,userId){
+  const row=await env.DB.prepare("SELECT COUNT(*) AS balance FROM music_quants m JOIN quant_wallets w ON w.wallet_id=m.owner_wallet_id WHERE w.user_id=?1 AND m.status='active'").bind(userId).first();
+  return Number(row?.balance||0);
+}
 async function state(env,account){
-  const [wallet,quant,counts,tokens,events]=await Promise.all([ensureState(env,account.id),quantState(env,account.id).catch(() => ({walletId:null,balance:0})),tokenCounts(env,account.id),env.DB.prepare('SELECT token_id,token_type,source,data_json,provenance_hash,created_at FROM unified_token_records WHERE user_id=?1 ORDER BY created_at DESC LIMIT 500').bind(account.id).all(),env.DB.prepare('SELECT event_id,asset_code,event_type,amount,balance_after,reference_id,metadata_json,created_at FROM unified_wallet_events WHERE user_id=?1 ORDER BY created_at DESC LIMIT 500').bind(account.id).all()]);
-  return {ok:true,user:{id:account.id,username:account.username},balances:{STARCOIN:Number(account.star_coins||0)+Number(account.pending_share_credits||0)/10,QUANT:quant.balance,MUSIC_QUANT:Number(counts.MUSIC_QUANT||0)+Number(counts.LISTENING_QUANT||0),INFINITY:Number(wallet.infinity_balance||0)},tokens:tokens.results.map(x=>({...x,data:JSON.parse(x.data_json)})),history:events.results.map(x=>({...x,metadata:JSON.parse(x.metadata_json)})),updatedAt:Number(wallet.updated_at||Date.now())};
+  const [wallet,quant,music,tokens,events]=await Promise.all([ensureState(env,account.id),quantState(env,account.id),musicState(env,account.id),env.DB.prepare('SELECT token_id,token_type,source,data_json,provenance_hash,created_at FROM unified_token_records WHERE user_id=?1 ORDER BY created_at DESC LIMIT 500').bind(account.id).all(),env.DB.prepare('SELECT event_id,asset_code,event_type,amount,balance_after,reference_id,metadata_json,created_at FROM unified_wallet_events WHERE user_id=?1 ORDER BY created_at DESC LIMIT 500').bind(account.id).all()]);
+  return {ok:true,user:{id:account.id,username:account.username},balances:{STARCOIN:Number(account.star_coins||0)+Number(account.pending_share_credits||0)/10,QUANT:quant.balance,MUSIC_QUANT:music,INFINITY:Number(wallet.infinity_balance||0)},tokens:tokens.results.map(x=>({...x,data:JSON.parse(x.data_json)})),history:events.results.map(x=>({...x,metadata:JSON.parse(x.metadata_json)})),updatedAt:Number(wallet.updated_at||Date.now())};
 }
 async function importLegacy(request,env,account){
   const input=await body(request),importKey=clean(input.importKey,120); if(!/^[A-Za-z0-9:_-]{8,120}$/.test(importKey)) throw Object.assign(new Error('invalid_import_key'),{status:400});
