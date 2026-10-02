@@ -56,7 +56,23 @@ async function importLegacy(request,env,account){
 async function mintToken(request,env,account){
   const input=await body(request),type=clean(input.type,30),idempotencyKey=clean(input.idempotencyKey,160),source=clean(input.source,120); if(!TOKEN_TYPES.has(type)||!idempotencyKey||!source) throw Object.assign(new Error('invalid_token'),{status:400});
   const data=input.data&&typeof input.data==='object'?input.data:{},canonical=JSON.stringify({userId:account.id,type,source,idempotencyKey,data}),hash=await digest(canonical),tokenId='ut_'+hash.slice(0,32),now=Date.now();
-  await env.DB.prepare('INSERT OR IGNORE INTO unified_token_records(token_id,user_id,token_type,source,data_json,provenance_hash,created_at) VALUES(?1,?2,?3,?4,?5,?6,?7)').bind(tokenId,account.id,type,source,JSON.stringify(data),hash,now).run(); return {ok:true,tokenId,provenanceHash:hash};
+  const prior=await env.DB.prepare('SELECT token_id FROM unified_token_records WHERE token_id=?1 AND user_id=?2').bind(tokenId,account.id).first();
+  if(prior){
+    const wallet=await ensureState(env,account.id);
+    return {ok:true,replayed:true,tokenId,provenanceHash:hash,balance:Number(wallet.infinity_balance||0)};
+  }
+  await ensureState(env,account.id);
+  if(type==='INFINITY_SEARCH'){
+    const wallet=await env.DB.prepare('SELECT infinity_balance FROM unified_wallet_state WHERE user_id=?1').bind(account.id).first(),balance=Number(wallet?.infinity_balance||0),next=balance+1;
+    await env.DB.batch([
+      env.DB.prepare('INSERT INTO unified_token_records(token_id,user_id,token_type,source,data_json,provenance_hash,created_at) VALUES(?1,?2,?3,?4,?5,?6,?7)').bind(tokenId,account.id,type,source,JSON.stringify(data),hash,now),
+      env.DB.prepare('UPDATE unified_wallet_state SET infinity_balance=?2,updated_at=?3 WHERE user_id=?1').bind(account.id,next,now),
+      env.DB.prepare("INSERT INTO unified_wallet_events(event_id,idempotency_key,user_id,asset_code,event_type,amount,balance_after,reference_id,metadata_json,created_at) VALUES(?1,?2,?3,'INFINITY','MINT',1,?4,?5,?6,?7)").bind('uwe_'+crypto.randomUUID(),'mint:'+account.id+':'+idempotencyKey,account.id,next,tokenId,JSON.stringify({source,type,search_id:clean(data.search_id,160),query:clean(data.query,200)}),now)
+    ]);
+    return {ok:true,replayed:false,tokenId,provenanceHash:hash,balance:next};
+  }
+  await env.DB.prepare('INSERT INTO unified_token_records(token_id,user_id,token_type,source,data_json,provenance_hash,created_at) VALUES(?1,?2,?3,?4,?5,?6,?7)').bind(tokenId,account.id,type,source,JSON.stringify(data),hash,now).run();
+  return {ok:true,replayed:false,tokenId,provenanceHash:hash};
 }
 async function spend(request,env,account){
   const input=await body(request),asset=clean(input.asset,30),amount=integer(input.amount,1,1000000),key=clean(input.idempotencyKey,160),now=Date.now(); if(asset!=='INFINITY'||!key) throw Object.assign(new Error('unsupported_spend'),{status:400}); await ensureState(env,account.id);
