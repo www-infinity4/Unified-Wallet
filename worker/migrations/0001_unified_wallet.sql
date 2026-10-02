@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS unified_wallet_state (
 CREATE TABLE IF NOT EXISTS unified_token_records (
   token_id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
-  token_type TEXT NOT NULL CHECK (token_type IN ('MUSIC_QUANT','LISTENING_QUANT','QUANT_DATA')),
+  token_type TEXT NOT NULL CHECK (token_type IN ('MUSIC_QUANT','LISTENING_QUANT','QUANT_DATA','INFINITY_SEARCH')),
   source TEXT NOT NULL,
   data_json TEXT NOT NULL,
   provenance_hash TEXT NOT NULL UNIQUE,
